@@ -60,7 +60,8 @@ The car was driving way better now around the track.
 
 Network architecture:
 
-I buildt a small network with 6 CNNs. I put a maxpool after every 2 CNNs and one dropout after the first 4 ones.
+I buildt a small network with 6 CNNs, comprised of 32, 64 and 128 filters of size 3X3. I put a maxpool after every 2 CNNs and one dropout after the first 4 ones.
 I wanted to avoid overfitting the model.
-I then added 4 FC layers. I also put two dropouts here.
-
+These convolution layers were followed by 3 fully connected layers. I also added two dropouts there.
+All the convolution blocks and the FC layers had exponential relu (ELU) as activation function. This in my opinion would help generate smoother angles.
+I trained the model using the keras generator with batch size of 256 for 6 epochs. In each epoch, I generated ~35000 images randomly. This was done to help the model generalize and not overfit.

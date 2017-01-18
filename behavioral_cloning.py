@@ -24,6 +24,8 @@ global data, y_train
 
 stats = defaultdict(float)
 
+# This method transform the image to HSV and randomizes the V value to change the brightness.
+# This will help our network. It will generate more easily and won't be affected by change in light conditions.
 def randomize_brightness(image):
     image = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
     random_brightness = .1 + np.random.uniform()
@@ -83,31 +85,41 @@ def load_data():
     data = pandas.read_csv('data/driving_log.csv', names=['center', 'left', 'right', 'steering', 'throttle', 'break', 'speed'])    
     y_train = data['steering'].values
 
+# This method describes the network architecture
 def SmallNetwork(input_shape):
     model = Sequential()
+    # 2 CNNs blocks comprised of 32 filters of size 3x3.
     model.add(ZeroPadding2D((1, 1), input_shape=(img_width, img_height, 3)))
     model.add(Convolution2D(32, 3, 3, activation='elu'))
     model.add(ZeroPadding2D((1, 1)))
     model.add(Convolution2D(32, 3, 3, activation='elu'))
+    # Maxpooling
     model.add(MaxPooling2D((2, 2), strides=(2, 2)))
 
+    # 2 CNNs blocks comprised of 64 filters of size 3x3.
     model.add(ZeroPadding2D((1, 1), input_shape=(img_width, img_height, 3)))
     model.add(Convolution2D(64, 3, 3, activation='elu'))
     model.add(ZeroPadding2D((1, 1)))
     model.add(Convolution2D(64, 3, 3, activation='elu'))
+    # Maxpooling + Dropout to avoid overfitting
     model.add(MaxPooling2D((2, 2), strides=(2, 2)))
     model.add(Dropout(0.5))    
 
+    # 2 CNNs blocks comprised of 128 filters of size 3x3.
     model.add(ZeroPadding2D((1, 1), input_shape=(img_width, img_height, 3)))
     model.add(Convolution2D(128, 3, 3, activation='elu'))
     model.add(ZeroPadding2D((1, 1)))
     model.add(Convolution2D(128, 3, 3, activation='elu'))
+    # Last Maxpooling. We went from an image (64, 64, 3), to an array of shape (8, 8, 128)
     model.add(MaxPooling2D((2, 2), strides=(2, 2)))    
 
+    # Fully connected layers part.
     model.add(Flatten(input_shape=input_shape))
     model.add(Dense(256, activation='elu'))
+    # Dropout here to avoid overfitting
     model.add(Dropout(0.5))    
     model.add(Dense(64, activation='elu'))
+    # Last Dropout to avoid overfitting
     model.add(Dropout(0.5))
     model.add(Dense(16, activation='elu'))    
     model.add(Dense(1))
