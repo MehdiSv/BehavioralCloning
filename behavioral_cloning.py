@@ -40,20 +40,20 @@ def X_generator():
     steerings = np.zeros(batch_size)    
 
     while True:
-        for i_batch in range(batch_size):            
+        for i_batch in range(batch_size):
             line_number = np.random.randint(len(data))
             data_to_process = data.iloc[[line_number]].reset_index()                    
             # Get center left or right image
             rand = np.random.randint(3)
             if (rand == 0):
-                path_file = data_to_process['center'][0].strip()
-                shift_ang = 0.                
+                path_file = data_to_process['left'][0].strip()
+                shift_ang = .3
             elif (rand == 1):
                 path_file = data_to_process['right'][0].strip()
-                shift_ang = -.25                
+                shift_ang = -.3
             else:
-                path_file = data_to_process['left'][0].strip()
-                shift_ang = .25                                
+                path_file = data_to_process['center'][0].strip()
+                shift_ang = 0.
             steering = data_to_process['steering'][0] + shift_ang
 
             # Keep only the relevant part of the road in the image and normalize
@@ -105,9 +105,8 @@ def SmallNetwork(input_shape):
     model.add(MaxPooling2D((2, 2), strides=(2, 2)))    
 
     model.add(Flatten(input_shape=input_shape))
-    model.add(Dense(2048, activation='elu'))    
-    model.add(Dropout(0.5))
-    model.add(Dense(256, activation='elu'))    
+    model.add(Dense(256, activation='elu'))
+    model.add(Dropout(0.5))    
     model.add(Dense(64, activation='elu'))
     model.add(Dropout(0.5))
     model.add(Dense(16, activation='elu'))    
@@ -125,10 +124,10 @@ if __name__ == '__main__':
     model = SmallNetwork(input_shape)
     opt = Adam(lr=0.0001)
     model.compile(loss='mse', optimizer=opt)
-    for i in range(6):
+    for i in range(5):
         train_generator = X_generator()
         train_validator = X_generator()
-        model.fit_generator(train_generator, samples_per_epoch=len(y_train) * 1.5, nb_epoch=epochs, validation_data=train_validator, nb_val_samples=len(y_train) / 6)
+        model.fit_generator(train_generator, samples_per_epoch=len(y_train), nb_epoch=epochs, validation_data=train_validator, nb_val_samples=len(y_train) / 6)
 
 
     with open('model.json', 'w') as fd:

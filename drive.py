@@ -25,6 +25,7 @@ prev_image_array = None
 
 @sio.on('telemetry')
 def telemetry(sid, data):
+    global old_steering_angle
     # The current steering angle of the car
     steering_angle = data["steering_angle"]
     # The current throttle of the car
@@ -38,9 +39,9 @@ def telemetry(sid, data):
     image = np.array(image) 
     new_size_col,new_size_row = 64, 64
     shape = image.shape
-    image = image[math.floor(shape[0]/5):shape[0]-25, 0:shape[1]] / 255.
+    image = image[math.floor(shape[0]/5.):shape[0]-25, 0:shape[1]]
     image = cv2.resize(image,(new_size_col,new_size_row),         interpolation=cv2.INTER_AREA)    
-    image = image/255.-.5
+    image = image/255.
 
 #    image_array = np.transpose(imresize(np.asarray(image), (20, 40)), (2, 1, 0)) / 255.0
 
@@ -48,8 +49,10 @@ def telemetry(sid, data):
     # This model currently assumes that the features of the model are just the images. Feel free to change this.
     steering_angle = float(model.predict(transformed_image_array, batch_size=1))
     # The driving model currently just outputs a constant throttle. Feel free to edit this.
-    throttle = 0.15
-    print(steering_angle, throttle)
+    throttle = 0.3
+    if abs(steering_angle) > 0.1:
+        throttle = 0.1
+    print(steering_angle, throttle)        
     send_control(steering_angle, throttle)
 
 
@@ -73,7 +76,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     with open(args.model, 'r') as jfile:
         model = model_from_json(json.load(jfile))
-
+    
     model.compile("adam", "mse")
     weights_file = args.model.replace('json', 'h5')
     model.load_weights(weights_file)
